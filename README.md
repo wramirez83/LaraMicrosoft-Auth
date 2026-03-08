@@ -38,6 +38,14 @@ composer require laramicrosoft/auth
 
 Guarda `client_id`, `client_secret`, `tenant` y la `redirect_uri` que hayas configurado; los usarás en el backend.
 
+### Error AADSTS900144 ("The request body must contain the following parameter: 'client_id'")
+
+Si ves este error al iniciar sesión, **el `client_id` no está llegando a Microsoft**: suele deberse a que no está configurado o está vacío en tu app.
+
+- Asegúrate de tener en tu `.env` (o config) el **Id. de aplicación (cliente)** de Azure y de que la app lo lee al construir la config:
+  - `ENTRA_CLIENT_ID` (o el nombre que uses) debe ser el valor exacto del "Application (client) ID" del registro en Azure.
+- No uses comillas vacías ni valores por defecto vacíos. Si la variable de entorno no existe, la librería lanzará una excepción clara al crear la config.
+
 ## Uso en el backend (PHP)
 
 ### Configuración
@@ -46,11 +54,12 @@ Guarda `client_id`, `client_secret`, `tenant` y la `redirect_uri` que hayas conf
 use LaraMicrosoft\Auth\Config\EntraIdConfig;
 use LaraMicrosoft\Auth\EntraIdAuthService;
 
+// Asegúrate de que ENTRA_CLIENT_ID, ENTRA_CLIENT_SECRET y redirect_uri están definidos y no vacíos
 $config = EntraIdConfig::fromArray([
-    'client_id'     => getenv('ENTRA_CLIENT_ID'),
+    'client_id'     => getenv('ENTRA_CLIENT_ID'),      // Id. de aplicación (cliente) de Azure
     'client_secret' => getenv('ENTRA_CLIENT_SECRET'),
     'redirect_uri'  => 'https://tu-dominio.com/auth/entra/callback',
-    'tenant'        => 'common', // o el tenant ID de tu organización
+    'tenant'        => getenv('ENTRA_TENANT_ID') ?: 'common',
     'scopes'        => ['openid', 'profile', 'email', 'User.Read'],
 ]);
 
