@@ -1,0 +1,44 @@
+{
+    "name": "laramicrosoft/auth",
+    "description": "LaraMicrosoft-Auth: autenticación social con Microsoft Entra ID (Office 365). Integrable con frontends Vue, Nuxt o React.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "laramicrosoft",
+        "laravel",
+        "oauth2",
+        "entra-id",
+        "azure-ad",
+        "office365",
+        "microsoft",
+        "social-auth",
+        "openid-connect"
+    ],
+    "authors": [
+        {
+            "name": "LaraMicrosoft",
+            "homepage": "https://github.com/laramicrosoft"
+        }
+    ],
+    "require": {
+        "php": ">=8.4",
+        "league/oauth2-client": "^2.7"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "LaraMicrosoft\\Auth\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LaraMicrosoft\\Auth\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable"
+}
