@@ -104,6 +104,33 @@ final class EntraIdAuthService
         ];
     }
 
+    /**
+     * Devuelve todos los datos que responde Office 365 / Entra ID: respuesta cruda del endpoint de tokens
+     * y todos los claims del usuario (userinfo). Útil para depuración o para guardar/auditar la respuesta completa.
+     *
+     * @return array{
+     *     token_response: array<string, mixed>,
+     *     user: array<string, mixed>
+     * }
+     */
+    public function exchangeCodeAndGetFullResponse(string $code, string $state, ?string $expectedState = null): array
+    {
+        $token = $this->exchangeCodeForToken($code, $state, $expectedState);
+        $user = $this->getUser($token);
+
+        $tokenResponse = array_merge($token->getValues(), [
+            'access_token'  => $token->getToken(),
+            'refresh_token' => $token->getRefreshToken(),
+            'expires'       => $token->getExpires(),
+        ]);
+        $tokenResponse = array_filter($tokenResponse, static fn ($v) => $v !== null && $v !== '');
+
+        return [
+            'token_response' => $tokenResponse,
+            'user'          => $user->toArray(),
+        ];
+    }
+
     public function getConfig(): EntraIdConfig
     {
         return $this->provider->getConfig();

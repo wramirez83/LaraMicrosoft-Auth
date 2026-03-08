@@ -18,6 +18,7 @@ Librería PHP para autenticación social con **Microsoft Entra ID** (Office 365)
 - [Endpoints del backend](#endpoints-del-backend)
 - [Integración en el frontend](#integración-en-el-frontend)
 - [Referencia de la API](#referencia-de-la-api)
+- [Datos que devuelve Office 365](#datos-que-devuelve-office-365)
 - [Opciones de configuración](#opciones-de-configuración)
 - [Solución de problemas](#solución-de-problemas)
 - [Seguridad](#seguridad)
@@ -295,6 +296,7 @@ if (code && state) {
 | `exchangeCodeForToken(string $code, string $state, ?string $expectedState)` | Canjea el código por un `AccessToken`. Lanza `InvalidStateException` o `TokenExchangeException` si falla. |
 | `getUser(AccessToken $token)` | Obtiene el usuario desde Microsoft (userinfo) como `EntraIdResourceOwner`. |
 | `exchangeCodeAndGetUser(string $code, string $state, ?string $expectedState)` | Equivalente a `exchangeCodeForToken` + `getUser`; devuelve `['token' => AccessToken, 'user' => EntraIdResourceOwner]`. |
+| `exchangeCodeAndGetFullResponse(string $code, string $state, ?string $expectedState)` | Igual que arriba pero devuelve **todos los datos crudos** de O365: `['token_response' => array, 'user' => array]`. Ver [Datos que devuelve Office 365](#datos-que-devuelve-office-365). |
 | `getConfig()` | Devuelve la instancia de `EntraIdConfig` usada. |
 
 ### EntraIdResourceOwner (usuario)
@@ -304,7 +306,51 @@ if (code && state) {
 - `getName()` – nombre completo
 - `getGivenName()` – nombre
 - `getFamilyName()` – apellido
-- `toArray()` – array con todos los claims
+- `toArray()` – **array con todos los claims** que devuelve Microsoft (userinfo)
+
+---
+
+## Datos que devuelve Office 365
+
+Para ver **toda la respuesta** de Entra ID (tokens + usuario), usa `exchangeCodeAndGetFullResponse()`:
+
+```php
+$full = $entraAuth->exchangeCodeAndGetFullResponse($code, $state, $expectedState);
+
+// Respuesta del endpoint de tokens (POST .../oauth2/v2.0/token)
+$full['token_response'];
+// Ejemplo: access_token, refresh_token, expires, token_type, scope, id_token (si aplica), etc.
+
+// Todos los claims del usuario (userinfo / OpenID Connect)
+$full['user'];
+// Ejemplo: sub, oid, name, given_name, family_name, email, preferred_username, etc.
+```
+
+### Campos típicos en `token_response`
+
+| Campo | Descripción |
+|-------|-------------|
+| `access_token` | Token para llamar a APIs (p. ej. Microsoft Graph). |
+| `refresh_token` | Presente si pediste el scope `offline_access`; sirve para renovar el access_token. |
+| `expires` | Timestamp Unix de expiración del access_token. |
+| `token_type` | Normalmente `Bearer`. |
+| `scope` | Scopes concedidos (separados por espacio). |
+| `id_token` | JWT con claims del usuario (si pediste `openid`). |
+
+### Campos típicos en `user` (userinfo)
+
+| Campo | Descripción |
+|-------|-------------|
+| `sub` | Identificador único del usuario (claim estándar OIDC). |
+| `oid` | Object ID en Microsoft Entra ID. |
+| `name` | Nombre completo. |
+| `given_name` | Nombre. |
+| `family_name` | Apellido. |
+| `email` | Email (puede no venir si no está configurado). |
+| `preferred_username` | UPN o email que usa para iniciar sesión. |
+| `tenant_id` / `tid` | ID del tenant. |
+
+Microsoft puede devolver más campos según permisos y configuración del tenant. Con `exchangeCodeAndGetFullResponse()` o `$user->toArray()` tienes siempre el array completo para inspeccionar o guardar.
 
 ---
 
